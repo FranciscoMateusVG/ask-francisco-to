@@ -18,13 +18,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(result.rows[0], { status: 201 })
 }
 
-export async function GET(req: NextRequest) {
-  const secret = req.headers.get('x-admin-secret') ?? ''
-
-  if (!verifySecret(secret)) {
-    return NextResponse.json({ ok: false, data: null })
-  }
-
+export async function GET() {
   const result = await pool.query(
     `SELECT * FROM "Request" ORDER BY "createdAt" DESC`
   )
