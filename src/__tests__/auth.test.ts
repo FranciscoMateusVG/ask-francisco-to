@@ -31,4 +31,32 @@ describe('verifySecret', () => {
     delete process.env.ADMIN_SECRET
     expect(verifySecret('banana123')).toBe(false)
   })
+
+  it('returns false when ADMIN_SECRET is empty string', () => {
+    process.env.ADMIN_SECRET = ''
+    expect(verifySecret('')).toBe(false)
+  })
+
+  it('is case-sensitive', () => {
+    expect(verifySecret('Banana123')).toBe(false)
+    expect(verifySecret('BANANA123')).toBe(false)
+  })
+
+  it('returns false with leading/trailing whitespace in input', () => {
+    expect(verifySecret(' banana123')).toBe(false)
+    expect(verifySecret('banana123 ')).toBe(false)
+    expect(verifySecret(' banana123 ')).toBe(false)
+  })
+
+  it('handles special characters in secret', () => {
+    process.env.ADMIN_SECRET = '!@#$%^&*()'
+    expect(verifySecret('!@#$%^&*()')).toBe(true)
+    expect(verifySecret('!@#$%^&*(')).toBe(false)
+  })
+
+  it('handles unicode in secret', () => {
+    process.env.ADMIN_SECRET = '🔐secret🔑'
+    expect(verifySecret('🔐secret🔑')).toBe(true)
+    expect(verifySecret('secret')).toBe(false)
+  })
 })
