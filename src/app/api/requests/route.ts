@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { pool } from '@/lib/db'
 import { verifySecret } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
@@ -10,15 +10,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'message is required' }, { status: 400 })
   }
 
-  const request = await prisma.request.create({
-    data: {
-      name: name?.trim() || null,
-      contact: contact?.trim() || null,
-      message: message.trim().slice(0, 2000),
-    },
-  })
+  const result = await pool.query(
+    `INSERT INTO "Request" (name, contact, message) VALUES ($1, $2, $3) RETURNING *`,
+    [name?.trim() || null, contact?.trim() || null, message.trim().slice(0, 2000)]
+  )
 
-  return NextResponse.json(request, { status: 201 })
+  return NextResponse.json(result.rows[0], { status: 201 })
 }
 
 export async function GET(req: NextRequest) {
@@ -28,9 +25,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, data: null })
   }
 
-  const data = await prisma.request.findMany({
-    orderBy: { createdAt: 'desc' },
-  })
+  const result = await pool.query(
+    `SELECT * FROM "Request" ORDER BY "createdAt" DESC`
+  )
 
-  return NextResponse.json({ ok: true, data })
+  return NextResponse.json({ ok: true, data: result.rows })
 }

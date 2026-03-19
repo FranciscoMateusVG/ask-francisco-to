@@ -1,3 +1,8 @@
+jest.mock('@/lib/db', () => ({
+  pool: { query: jest.fn() },
+  ensureSchema: jest.fn().mockResolvedValue(undefined),
+}))
+
 describe('instrumentation register()', () => {
   const originalEnv = process.env
 

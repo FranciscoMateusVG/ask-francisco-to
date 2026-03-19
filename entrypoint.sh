@@ -6,7 +6,5 @@ if [ -z "$ADMIN_SECRET" ]; then
   exit 1
 fi
 
-echo "Running database migrations..."
-npx prisma migrate deploy
 echo "Starting server..."
 exec node server.js

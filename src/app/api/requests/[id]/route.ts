@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { pool } from '@/lib/db'
 import { verifySecret } from '@/lib/auth'
 
 export async function PATCH(
@@ -10,10 +10,10 @@ export async function PATCH(
   const secret = req.headers.get('x-admin-secret') ?? ''
   if (!verifySecret(secret)) return NextResponse.json({ ok: false })
 
-  await prisma.request.update({
-    where: { id: parseInt(id) },
-    data: { done: true },
-  })
+  await pool.query(
+    `UPDATE "Request" SET done = true WHERE id = $1`,
+    [parseInt(id)]
+  )
 
   return NextResponse.json({ ok: true })
 }
@@ -26,9 +26,10 @@ export async function DELETE(
   const secret = req.headers.get('x-admin-secret') ?? ''
   if (!verifySecret(secret)) return NextResponse.json({ ok: false })
 
-  await prisma.request.delete({
-    where: { id: parseInt(id) },
-  })
+  await pool.query(
+    `DELETE FROM "Request" WHERE id = $1`,
+    [parseInt(id)]
+  )
 
   return NextResponse.json({ ok: true })
 }

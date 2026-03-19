@@ -1,17 +1,24 @@
-import { PrismaClient } from '@/generated/prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
+import pg from 'pg'
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+const globalForPool = globalThis as unknown as {
+  pool: pg.Pool | undefined
 }
 
-function createPrismaClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL
-  const adapter = new PrismaPg({ connectionString })
-  return new PrismaClient({ adapter }) as unknown as PrismaClient
+export const pool =
+  globalForPool.pool ??
+  new pg.Pool({ connectionString: process.env.DATABASE_URL })
+
+if (process.env.NODE_ENV !== 'production') globalForPool.pool = pool
+
+export async function ensureSchema() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS "Request" (
+      id SERIAL PRIMARY KEY,
+      name TEXT,
+      contact TEXT,
+      message TEXT NOT NULL,
+      done BOOLEAN NOT NULL DEFAULT false,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
 }
-
-export const prisma =
-  globalForPrisma.prisma ?? createPrismaClient()
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

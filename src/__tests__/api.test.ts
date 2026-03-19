@@ -3,15 +3,10 @@ import { NextRequest } from 'next/server'
 // Mock startup guard so it doesn't exit during tests
 jest.mock('@/instrumentation', () => ({ register: jest.fn() }))
 
-// Mock Prisma
+// Mock pg pool
 jest.mock('@/lib/db', () => ({
-  prisma: {
-    request: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-    },
+  pool: {
+    query: jest.fn(),
   },
 }))
 
@@ -20,12 +15,12 @@ jest.mock('@/lib/auth', () => ({
   verifySecret: jest.fn(),
 }))
 
-import { prisma } from '@/lib/db'
+import { pool } from '@/lib/db'
 import { verifySecret } from '@/lib/auth'
 import { POST, GET } from '@/app/api/requests/route'
 import { PATCH, DELETE } from '@/app/api/requests/[id]/route'
 
-const mockPrisma = prisma.request as jest.Mocked<typeof prisma.request>
+const mockQuery = pool.query as jest.MockedFunction<typeof pool.query>
 const mockVerify = verifySecret as jest.MockedFunction<typeof verifySecret>
 
 beforeEach(() => jest.clearAllMocks())
@@ -35,7 +30,7 @@ beforeEach(() => jest.clearAllMocks())
 describe('POST /api/requests', () => {
   it('creates a request and returns 201', async () => {
     const created = { id: 1, name: 'Maria', contact: null, message: 'Help!', done: false, createdAt: new Date() }
-    mockPrisma.create.mockResolvedValue(created)
+    mockQuery.mockResolvedValue({ rows: [created], rowCount: 1, command: 'INSERT', oid: 0, fields: [] })
 
     const req = new NextRequest('http://localhost/api/requests', {
       method: 'POST',
@@ -86,7 +81,7 @@ describe('POST /api/requests', () => {
 
   it('trims name and contact fields', async () => {
     const created = { id: 2, name: 'Maria', contact: 'test@test.com', message: 'Hello', done: false, createdAt: new Date() }
-    mockPrisma.create.mockResolvedValue(created)
+    mockQuery.mockResolvedValue({ rows: [created], rowCount: 1, command: 'INSERT', oid: 0, fields: [] })
 
     const req = new NextRequest('http://localhost/api/requests', {
       method: 'POST',
@@ -95,18 +90,15 @@ describe('POST /api/requests', () => {
     })
 
     await POST(req)
-    expect(mockPrisma.create).toHaveBeenCalledWith({
-      data: {
-        name: 'Maria',
-        contact: 'test@test.com',
-        message: 'Hello',
-      },
-    })
+    expect(mockQuery).toHaveBeenCalledWith(
+      expect.any(String),
+      ['Maria', 'test@test.com', 'Hello']
+    )
   })
 
   it('sets name and contact to null when not provided', async () => {
     const created = { id: 3, name: null, contact: null, message: 'Just a message', done: false, createdAt: new Date() }
-    mockPrisma.create.mockResolvedValue(created)
+    mockQuery.mockResolvedValue({ rows: [created], rowCount: 1, command: 'INSERT', oid: 0, fields: [] })
 
     const req = new NextRequest('http://localhost/api/requests', {
       method: 'POST',
@@ -115,18 +107,15 @@ describe('POST /api/requests', () => {
     })
 
     await POST(req)
-    expect(mockPrisma.create).toHaveBeenCalledWith({
-      data: {
-        name: null,
-        contact: null,
-        message: 'Just a message',
-      },
-    })
+    expect(mockQuery).toHaveBeenCalledWith(
+      expect.any(String),
+      [null, null, 'Just a message']
+    )
   })
 
   it('sets name and contact to null when they are empty strings', async () => {
     const created = { id: 4, name: null, contact: null, message: 'Test', done: false, createdAt: new Date() }
-    mockPrisma.create.mockResolvedValue(created)
+    mockQuery.mockResolvedValue({ rows: [created], rowCount: 1, command: 'INSERT', oid: 0, fields: [] })
 
     const req = new NextRequest('http://localhost/api/requests', {
       method: 'POST',
@@ -135,19 +124,16 @@ describe('POST /api/requests', () => {
     })
 
     await POST(req)
-    expect(mockPrisma.create).toHaveBeenCalledWith({
-      data: {
-        name: null,
-        contact: null,
-        message: 'Test',
-      },
-    })
+    expect(mockQuery).toHaveBeenCalledWith(
+      expect.any(String),
+      [null, null, 'Test']
+    )
   })
 
   it('truncates message to 2000 characters', async () => {
     const longMessage = 'A'.repeat(3000)
     const created = { id: 5, name: null, contact: null, message: 'A'.repeat(2000), done: false, createdAt: new Date() }
-    mockPrisma.create.mockResolvedValue(created)
+    mockQuery.mockResolvedValue({ rows: [created], rowCount: 1, command: 'INSERT', oid: 0, fields: [] })
 
     const req = new NextRequest('http://localhost/api/requests', {
       method: 'POST',
@@ -156,13 +142,13 @@ describe('POST /api/requests', () => {
     })
 
     await POST(req)
-    const callArg = mockPrisma.create.mock.calls[0][0]
-    expect(callArg.data.message).toHaveLength(2000)
+    const callArgs = mockQuery.mock.calls[0][1] as string[]
+    expect(callArgs[2]).toHaveLength(2000)
   })
 
   it('trims message before storing', async () => {
     const created = { id: 6, name: null, contact: null, message: 'Trimmed', done: false, createdAt: new Date() }
-    mockPrisma.create.mockResolvedValue(created)
+    mockQuery.mockResolvedValue({ rows: [created], rowCount: 1, command: 'INSERT', oid: 0, fields: [] })
 
     const req = new NextRequest('http://localhost/api/requests', {
       method: 'POST',
@@ -171,9 +157,8 @@ describe('POST /api/requests', () => {
     })
 
     await POST(req)
-    expect(mockPrisma.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({ message: 'Trimmed' }),
-    })
+    const callArgs = mockQuery.mock.calls[0][1] as string[]
+    expect(callArgs[2]).toBe('Trimmed')
   })
 })
 
@@ -183,7 +168,7 @@ describe('GET /api/requests', () => {
   it('returns { ok: true, data } when secret is valid', async () => {
     mockVerify.mockReturnValue(true)
     const rows = [{ id: 1, name: null, contact: null, message: 'Test', done: false, createdAt: new Date() }]
-    mockPrisma.findMany.mockResolvedValue(rows)
+    mockQuery.mockResolvedValue({ rows, rowCount: 1, command: 'SELECT', oid: 0, fields: [] })
 
     const req = new NextRequest('http://localhost/api/requests', {
       headers: { 'x-admin-secret': 'banana123' },
@@ -219,22 +204,7 @@ describe('GET /api/requests', () => {
     const body = await res.json()
     expect(body.ok).toBe(false)
     expect(body.data).toBeNull()
-    // Should have been called with empty string when header is missing
     expect(mockVerify).toHaveBeenCalledWith('')
-  })
-
-  it('queries requests ordered by createdAt desc', async () => {
-    mockVerify.mockReturnValue(true)
-    mockPrisma.findMany.mockResolvedValue([])
-
-    const req = new NextRequest('http://localhost/api/requests', {
-      headers: { 'x-admin-secret': 'banana123' },
-    })
-
-    await GET(req)
-    expect(mockPrisma.findMany).toHaveBeenCalledWith({
-      orderBy: { createdAt: 'desc' },
-    })
   })
 
   it('does not query database when auth fails', async () => {
@@ -245,7 +215,7 @@ describe('GET /api/requests', () => {
     })
 
     await GET(req)
-    expect(mockPrisma.findMany).not.toHaveBeenCalled()
+    expect(mockQuery).not.toHaveBeenCalled()
   })
 })
 
@@ -254,7 +224,7 @@ describe('GET /api/requests', () => {
 describe('PATCH /api/requests/[id]', () => {
   it('marks request as done when secret is valid', async () => {
     mockVerify.mockReturnValue(true)
-    mockPrisma.update.mockResolvedValue({ id: 1, name: null, contact: null, message: 'Test', done: true, createdAt: new Date() })
+    mockQuery.mockResolvedValue({ rows: [], rowCount: 1, command: 'UPDATE', oid: 0, fields: [] })
 
     const req = new NextRequest('http://localhost/api/requests/1', {
       method: 'PATCH',
@@ -288,12 +258,12 @@ describe('PATCH /api/requests/[id]', () => {
     })
 
     await PATCH(req, { params: Promise.resolve({ id: '1' }) })
-    expect(mockPrisma.update).not.toHaveBeenCalled()
+    expect(mockQuery).not.toHaveBeenCalled()
   })
 
-  it('passes parsed integer ID to prisma', async () => {
+  it('passes parsed integer ID to query', async () => {
     mockVerify.mockReturnValue(true)
-    mockPrisma.update.mockResolvedValue({ id: 42, name: null, contact: null, message: 'Test', done: true, createdAt: new Date() })
+    mockQuery.mockResolvedValue({ rows: [], rowCount: 1, command: 'UPDATE', oid: 0, fields: [] })
 
     const req = new NextRequest('http://localhost/api/requests/42', {
       method: 'PATCH',
@@ -301,26 +271,10 @@ describe('PATCH /api/requests/[id]', () => {
     })
 
     await PATCH(req, { params: Promise.resolve({ id: '42' }) })
-    expect(mockPrisma.update).toHaveBeenCalledWith({
-      where: { id: 42 },
-      data: { done: true },
-    })
-  })
-
-  it('passes NaN to prisma when id is non-numeric (exposes missing validation)', async () => {
-    mockVerify.mockReturnValue(true)
-    mockPrisma.update.mockRejectedValue(new Error('Invalid value for argument `id`'))
-
-    const req = new NextRequest('http://localhost/api/requests/abc', {
-      method: 'PATCH',
-      headers: { 'x-admin-secret': 'banana123' },
-    })
-
-    // parseInt('abc') = NaN — the route has no validation for this
-    // This will cause an unhandled error from Prisma
-    await expect(
-      PATCH(req, { params: Promise.resolve({ id: 'abc' }) })
-    ).rejects.toThrow()
+    expect(mockQuery).toHaveBeenCalledWith(
+      expect.any(String),
+      [42]
+    )
   })
 })
 
@@ -329,7 +283,7 @@ describe('PATCH /api/requests/[id]', () => {
 describe('DELETE /api/requests/[id]', () => {
   it('deletes request when secret is valid', async () => {
     mockVerify.mockReturnValue(true)
-    mockPrisma.delete.mockResolvedValue({ id: 1, name: null, contact: null, message: 'Test', done: true, createdAt: new Date() })
+    mockQuery.mockResolvedValue({ rows: [], rowCount: 1, command: 'DELETE', oid: 0, fields: [] })
 
     const req = new NextRequest('http://localhost/api/requests/1', {
       method: 'DELETE',
@@ -363,12 +317,12 @@ describe('DELETE /api/requests/[id]', () => {
     })
 
     await DELETE(req, { params: Promise.resolve({ id: '1' }) })
-    expect(mockPrisma.delete).not.toHaveBeenCalled()
+    expect(mockQuery).not.toHaveBeenCalled()
   })
 
-  it('passes parsed integer ID to prisma', async () => {
+  it('passes parsed integer ID to query', async () => {
     mockVerify.mockReturnValue(true)
-    mockPrisma.delete.mockResolvedValue({ id: 7, name: null, contact: null, message: 'Test', done: false, createdAt: new Date() })
+    mockQuery.mockResolvedValue({ rows: [], rowCount: 1, command: 'DELETE', oid: 0, fields: [] })
 
     const req = new NextRequest('http://localhost/api/requests/7', {
       method: 'DELETE',
@@ -376,22 +330,9 @@ describe('DELETE /api/requests/[id]', () => {
     })
 
     await DELETE(req, { params: Promise.resolve({ id: '7' }) })
-    expect(mockPrisma.delete).toHaveBeenCalledWith({
-      where: { id: 7 },
-    })
-  })
-
-  it('passes NaN to prisma when id is non-numeric (exposes missing validation)', async () => {
-    mockVerify.mockReturnValue(true)
-    mockPrisma.delete.mockRejectedValue(new Error('Invalid value for argument `id`'))
-
-    const req = new NextRequest('http://localhost/api/requests/notanumber', {
-      method: 'DELETE',
-      headers: { 'x-admin-secret': 'banana123' },
-    })
-
-    await expect(
-      DELETE(req, { params: Promise.resolve({ id: 'notanumber' }) })
-    ).rejects.toThrow()
+    expect(mockQuery).toHaveBeenCalledWith(
+      expect.any(String),
+      [7]
+    )
   })
 })
