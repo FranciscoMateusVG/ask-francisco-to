@@ -15,26 +15,27 @@ type Task = {
 }
 
 const PRIORITY_CONFIG: Record<string, { label: string; dot: string }> = {
-  critical: { label: 'Critical', dot: 'bg-red-500' },
-  high:     { label: 'High',     dot: 'bg-orange-400' },
-  medium:   { label: 'Medium',   dot: 'bg-yellow-400' },
-  low:      { label: 'Low',      dot: 'bg-green-400' },
+  critical: { label: 'Crítica',  dot: 'bg-red-500' },
+  high:     { label: 'Alta',     dot: 'bg-orange-400' },
+  medium:   { label: 'Média',    dot: 'bg-yellow-400' },
+  low:      { label: 'Baixa',    dot: 'bg-green-400' },
 }
 
 const TYPE_LABEL: Record<string, string> = {
+  pedido:      '📋 Pedido',
   bug:         '🐛 Bug',
-  new_feature: '✨ New Feature',
-  improvement: '🔧 Improvement',
-  question:    '❓ Question',
+  new_feature: '✨ Nova Funcionalidade',
+  improvement: '🔧 Melhoria',
+  question:    '❓ Dúvida',
 }
 
 function timeAgo(dateStr: string): string {
   const date = new Date(dateStr + (dateStr.endsWith('Z') ? '' : 'Z'))
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
-  if (seconds < 60) return 'just now'
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-  return `${Math.floor(seconds / 86400)}d ago`
+  if (seconds < 60) return 'agora mesmo'
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m atrás`
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h atrás`
+  return `${Math.floor(seconds / 86400)}d atrás`
 }
 
 export function TaskList() {
@@ -60,7 +61,7 @@ export function TaskList() {
   if (loading) {
     return (
       <div className="w-full max-w-2xl text-center py-12">
-        <p className="text-purple-300 text-sm animate-pulse">Loading tasks...</p>
+        <p className="text-purple-300 text-sm animate-pulse">Carregando tarefas...</p>
       </div>
     )
   }
@@ -68,7 +69,7 @@ export function TaskList() {
   if (error) {
     return (
       <div className="w-full max-w-2xl text-center py-12">
-        <p className="text-red-300 text-sm">Couldn&apos;t load tasks. Please try again.</p>
+        <p className="text-red-300 text-sm">Erro ao carregar tarefas. Tente novamente.</p>
       </div>
     )
   }
@@ -79,7 +80,7 @@ export function TaskList() {
       <div>
         <h2 className="text-xs font-semibold uppercase tracking-widest text-purple-300 mb-3 flex items-center gap-2">
           <span className="w-2 h-2 bg-purple-400 rounded-full inline-block" />
-          Pending
+          Pendente
           <span className="bg-purple-800 text-purple-200 text-xs font-bold px-2 py-0.5 rounded-full ml-1">
             {pending.length}
           </span>
@@ -88,7 +89,7 @@ export function TaskList() {
         {pending.length === 0 ? (
           <div className="bg-white/10 rounded-xl border border-white/10 py-10 text-center">
             <p className="text-3xl mb-3">🎉</p>
-            <p className="text-purple-200 text-sm font-medium">Nothing pending — all clear!</p>
+            <p className="text-purple-200 text-sm font-medium">Nada pendente — tudo em dia!</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -107,7 +108,7 @@ export function TaskList() {
             className="text-xs text-purple-400 uppercase tracking-widest font-semibold mb-3 flex items-center gap-2 hover:text-purple-300 transition-colors"
           >
             <span className="w-2 h-2 bg-purple-700 rounded-full inline-block" />
-            {showDone ? '▾' : '▸'} Done
+            {showDone ? '▾' : '▸'} Concluídos
             <span className="bg-purple-900 text-purple-400 text-xs font-bold px-2 py-0.5 rounded-full ml-1">
               {done.length}
             </span>
@@ -153,7 +154,7 @@ function TaskCard({ task, faded = false }: { task: Task; faded?: boolean }) {
               </span>
             )}
             <span>·</span>
-            <span>{task.name ?? 'Anonymous'}</span>
+            <span>{task.name ?? 'Anônimo'}</span>
             <span>·</span>
             <span>{timeAgo(task.createdAt)}</span>
           </div>

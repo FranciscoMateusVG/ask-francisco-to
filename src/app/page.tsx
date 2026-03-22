@@ -11,8 +11,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-950 flex flex-col items-center px-4 py-12">
-      <h1 className="text-white text-3xl font-bold mb-2">✉️ Ask Francisco To...</h1>
-      <p className="text-purple-200 text-sm mb-8">Need something done? Submit a ticket below 👋</p>
+      <h1 className="text-white text-3xl font-bold mb-2">✉️ Pede pro Francisco...</h1>
+      <p className="text-purple-200 text-sm mb-8">Precisa de algo? Envie seu chamado abaixo 👋</p>
 
       {/* Tab switcher */}
       <div className="flex gap-1 bg-white/10 p-1 rounded-xl mb-8">
@@ -24,7 +24,7 @@ export default function Home() {
               : 'text-purple-200 hover:text-white'
           }`}
         >
-          Submit a Request
+          Enviar Solicitação
         </button>
         <button
           onClick={() => setTab('tasks')}
@@ -34,7 +34,7 @@ export default function Home() {
               : 'text-purple-200 hover:text-white'
           }`}
         >
-          My Tasks
+          Minhas Tarefas
         </button>
       </div>
 

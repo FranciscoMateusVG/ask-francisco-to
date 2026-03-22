@@ -3,7 +3,7 @@
 import { useState } from 'react'
 
 type State = 'idle' | 'loading' | 'success' | 'error'
-type TicketType = 'bug' | 'new_feature' | 'improvement' | 'question' | ''
+type TicketType = 'bug' | 'new_feature' | 'improvement' | 'question' | 'pedido' | ''
 type Priority = 'low' | 'medium' | 'high' | 'critical'
 
 export function RequestForm() {
@@ -34,15 +34,15 @@ export function RequestForm() {
     setValidationError('')
 
     if (!title.trim()) {
-      setValidationError('Please provide a title for your request.')
+      setValidationError('Por favor, informe um título para seu pedido.')
       return
     }
     if (!message.trim()) {
-      setValidationError('Please describe your request in detail.')
+      setValidationError('Por favor, descreva seu pedido em detalhes.')
       return
     }
     if (!ticketType) {
-      setValidationError('Please select a request type.')
+      setValidationError('Por favor, selecione um tipo.')
       return
     }
 
@@ -77,8 +77,8 @@ export function RequestForm() {
     return (
       <div className="bg-white rounded-2xl p-8 w-full max-w-2xl shadow-2xl text-center">
         <div className="text-5xl mb-4">🙌</div>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Got it, thanks!</h2>
-        <p className="text-gray-500 text-sm">Francisco will see your request. You&apos;re done!</p>
+        <h2 className="text-xl font-bold text-gray-800 mb-2">Recebido, obrigado!</h2>
+        <p className="text-gray-500 text-sm">Francisco verá seu pedido. Pronto!</p>
       </div>
     )
   }
@@ -93,7 +93,7 @@ export function RequestForm() {
         {/* Type */}
         <div>
           <label className={labelClass}>
-            Type <span className="text-purple-400">*</span>
+            Tipo <span className="text-purple-400">*</span>
           </label>
           <select
             value={ticketType}
@@ -101,27 +101,28 @@ export function RequestForm() {
             className={selectClass}
             data-testid="ticket-type"
           >
-            <option value="">Select type...</option>
+            <option value="">Selecione o tipo...</option>
+            <option value="pedido">📋 Pedido</option>
             <option value="bug">🐛 Bug</option>
-            <option value="new_feature">✨ New Feature</option>
-            <option value="improvement">🔧 Improvement</option>
-            <option value="question">❓ Question</option>
+            <option value="new_feature">✨ Nova Funcionalidade</option>
+            <option value="improvement">🔧 Melhoria</option>
+            <option value="question">❓ Dúvida</option>
           </select>
         </div>
 
         {/* Priority */}
         <div>
-          <label className={labelClass}>Priority</label>
+          <label className={labelClass}>Prioridade</label>
           <select
             value={priority}
             onChange={e => setPriority(e.target.value as Priority)}
             className={selectClass}
             data-testid="priority"
           >
-            <option value="low">🟢 Low</option>
-            <option value="medium">🟡 Medium</option>
-            <option value="high">🟠 High</option>
-            <option value="critical">🔴 Critical</option>
+            <option value="low">🟢 Baixa</option>
+            <option value="medium">🟡 Média</option>
+            <option value="high">🟠 Alta</option>
+            <option value="critical">🔴 Crítica</option>
           </select>
         </div>
       </div>
@@ -129,13 +130,13 @@ export function RequestForm() {
       {/* Title */}
       <div className="mb-4">
         <label className={labelClass}>
-          Title <span className="text-purple-400">*</span>
+          Título <span className="text-purple-400">*</span>
         </label>
         <input
           type="text"
           value={title}
           onChange={e => setTitle(e.target.value)}
-          placeholder="Short description of the request"
+          placeholder="Descrição curta do pedido"
           maxLength={200}
           className={inputClass}
           data-testid="title"
@@ -145,13 +146,13 @@ export function RequestForm() {
       {/* Affected Area */}
       <div className="mb-4">
         <label className={labelClass}>
-          Affected area / module / screen <span className="text-gray-300 font-normal">(optional)</span>
+          Área afetada / módulo / tela <span className="text-gray-300 font-normal">(opcional)</span>
         </label>
         <input
           type="text"
           value={affectedArea}
           onChange={e => setAffectedArea(e.target.value)}
-          placeholder="e.g. Login page, API, Dashboard..."
+          placeholder="Ex: Página de login, API, Dashboard..."
           className={inputClass}
           data-testid="affected-area"
         />
@@ -160,12 +161,12 @@ export function RequestForm() {
       {/* Detailed Description */}
       <div className="mb-4">
         <label className={labelClass}>
-          Description <span className="text-purple-400">*</span>
+          Descrição <span className="text-purple-400">*</span>
         </label>
         <textarea
           value={message}
           onChange={e => setMessage(e.target.value)}
-          placeholder="Describe the problem or request in detail..."
+          placeholder="Descreva o problema ou pedido em detalhes..."
           maxLength={2000}
           rows={4}
           className={`${inputClass} resize-none`}
@@ -176,14 +177,14 @@ export function RequestForm() {
       {/* Bug-specific fields */}
       {isBug && (
         <div className="mb-4 p-4 bg-red-50 rounded-xl border border-red-100 space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-red-400">Bug details</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-red-400">Detalhes do bug</p>
 
           <div>
-            <label className={labelClass}>Steps to reproduce <span className="text-gray-300 font-normal">(optional)</span></label>
+            <label className={labelClass}>Passos para reproduzir <span className="text-gray-300 font-normal">(opcional)</span></label>
             <textarea
               value={stepsToReproduce}
               onChange={e => setStepsToReproduce(e.target.value)}
-              placeholder="1. Go to...&#10;2. Click on...&#10;3. See error"
+              placeholder="1. Vá até...&#10;2. Clique em...&#10;3. Veja o erro"
               rows={3}
               className={`${inputClass} resize-none`}
               data-testid="steps-to-reproduce"
@@ -192,22 +193,22 @@ export function RequestForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Expected behaviour <span className="text-gray-300 font-normal">(optional)</span></label>
+              <label className={labelClass}>Comportamento esperado <span className="text-gray-300 font-normal">(opcional)</span></label>
               <textarea
                 value={expectedBehavior}
                 onChange={e => setExpectedBehavior(e.target.value)}
-                placeholder="What should happen..."
+                placeholder="O que deveria acontecer..."
                 rows={2}
                 className={`${inputClass} resize-none`}
                 data-testid="expected-behavior"
               />
             </div>
             <div>
-              <label className={labelClass}>Actual behaviour <span className="text-gray-300 font-normal">(optional)</span></label>
+              <label className={labelClass}>Comportamento atual <span className="text-gray-300 font-normal">(opcional)</span></label>
               <textarea
                 value={actualBehavior}
                 onChange={e => setActualBehavior(e.target.value)}
-                placeholder="What actually happens..."
+                placeholder="O que realmente acontece..."
                 rows={2}
                 className={`${inputClass} resize-none`}
                 data-testid="actual-behavior"
@@ -221,7 +222,7 @@ export function RequestForm() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
         <div>
           <label className={labelClass}>
-            Your name <span className="text-gray-300 font-normal">(optional)</span>
+            Seu nome <span className="text-gray-300 font-normal">(opcional)</span>
           </label>
           <input
             type="text"
@@ -233,13 +234,13 @@ export function RequestForm() {
         </div>
         <div>
           <label className={labelClass}>
-            How to reach you <span className="text-gray-300 font-normal">(optional)</span>
+            Como te contatar <span className="text-gray-300 font-normal">(opcional)</span>
           </label>
           <input
             type="text"
             value={contact}
             onChange={e => setContact(e.target.value)}
-            placeholder="WhatsApp, email, whatever works..."
+            placeholder="WhatsApp, email, o que preferir..."
             className={inputClass}
           />
         </div>
@@ -250,7 +251,7 @@ export function RequestForm() {
       )}
 
       {state === 'error' && (
-        <p className="text-red-400 text-sm mb-3 text-center">Something went wrong, please try again.</p>
+        <p className="text-red-400 text-sm mb-3 text-center">Algo deu errado, tente novamente.</p>
       )}
 
       <button
@@ -258,10 +259,10 @@ export function RequestForm() {
         disabled={state === 'loading'}
         className="w-full bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-lg py-3 text-sm font-semibold disabled:opacity-60 hover:from-purple-600 hover:to-purple-800 transition-all"
       >
-        {state === 'loading' ? 'Sending...' : 'Send Request ✨'}
+        {state === 'loading' ? 'Enviando...' : 'Enviar ✨'}
       </button>
 
-      <p className="text-center text-xs text-gray-300 mt-3">* required fields</p>
+      <p className="text-center text-xs text-gray-300 mt-3">* campos obrigatórios</p>
     </form>
   )
 }
