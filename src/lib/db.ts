@@ -21,4 +21,18 @@ export async function ensureSchema() {
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `)
+
+  // Ticket fields — idempotent, safe to run on every startup
+  const alterStatements = [
+    `ALTER TABLE "Request" ADD COLUMN IF NOT EXISTS title TEXT`,
+    `ALTER TABLE "Request" ADD COLUMN IF NOT EXISTS ticket_type TEXT`,
+    `ALTER TABLE "Request" ADD COLUMN IF NOT EXISTS affected_area TEXT`,
+    `ALTER TABLE "Request" ADD COLUMN IF NOT EXISTS steps_to_reproduce TEXT`,
+    `ALTER TABLE "Request" ADD COLUMN IF NOT EXISTS expected_behavior TEXT`,
+    `ALTER TABLE "Request" ADD COLUMN IF NOT EXISTS actual_behavior TEXT`,
+    `ALTER TABLE "Request" ADD COLUMN IF NOT EXISTS priority TEXT DEFAULT 'medium'`,
+  ]
+  for (const sql of alterStatements) {
+    await pool.query(sql)
+  }
 }

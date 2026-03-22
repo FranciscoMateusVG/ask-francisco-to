@@ -14,9 +14,27 @@ beforeEach(() => {
 })
 
 const sampleRequests = [
-  { id: 1, name: 'Alice', contact: 'alice@test.com', message: 'Fix printer', done: false, createdAt: new Date().toISOString() },
-  { id: 2, name: null, contact: null, message: 'Update server', done: false, createdAt: new Date().toISOString() },
-  { id: 3, name: 'Bob', contact: null, message: 'Old task', done: true, createdAt: '2026-03-01T12:00:00Z' },
+  {
+    id: 1, name: 'Alice', contact: 'alice@test.com',
+    title: 'Fix printer', message: 'The printer is broken',
+    ticket_type: 'bug', affected_area: 'Office', priority: 'high',
+    steps_to_reproduce: null, expected_behavior: null, actual_behavior: null,
+    done: false, createdAt: new Date().toISOString(),
+  },
+  {
+    id: 2, name: null, contact: null,
+    title: null, message: 'Update server',
+    ticket_type: 'improvement', affected_area: null, priority: 'medium',
+    steps_to_reproduce: null, expected_behavior: null, actual_behavior: null,
+    done: false, createdAt: new Date().toISOString(),
+  },
+  {
+    id: 3, name: 'Bob', contact: null,
+    title: 'Old task', message: 'This is done already',
+    ticket_type: null, affected_area: null, priority: 'low',
+    steps_to_reproduce: null, expected_behavior: null, actual_behavior: null,
+    done: true, createdAt: '2026-03-01T12:00:00Z',
+  },
 ]
 
 describe('AdminPanel', () => {
@@ -24,7 +42,7 @@ describe('AdminPanel', () => {
     render(<AdminPanel />)
 
     expect(screen.getByPlaceholderText(/enter secret word/i)).toBeInTheDocument()
-    expect(screen.getByText(/Unlock/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Unlock' })).toBeInTheDocument()
     expect(screen.getByText(/0 pending/i)).toBeInTheDocument()
   })
 
@@ -38,14 +56,14 @@ describe('AdminPanel', () => {
     render(<AdminPanel />)
 
     await user.type(screen.getByPlaceholderText(/enter secret word/i), 'banana123')
-    await user.click(screen.getByText(/Unlock/i))
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
 
     await waitFor(() => {
       expect(screen.getByText('✓ unlocked')).toBeInTheDocument()
     })
 
-    // Should show pending requests
-    expect(screen.getByText('Fix printer')).toBeInTheDocument()
+    // Should show pending request messages
+    expect(screen.getByText('The printer is broken')).toBeInTheDocument()
     expect(screen.getByText('Update server')).toBeInTheDocument()
     // Pending count
     expect(screen.getByText('2 pending')).toBeInTheDocument()
@@ -61,7 +79,7 @@ describe('AdminPanel', () => {
     render(<AdminPanel />)
 
     await user.type(screen.getByPlaceholderText(/enter secret word/i), 'wrong')
-    await user.click(screen.getByText(/Unlock/i))
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalled()
@@ -80,7 +98,7 @@ describe('AdminPanel', () => {
     render(<AdminPanel />)
 
     await user.type(screen.getByPlaceholderText(/enter secret word/i), 'mypassword')
-    await user.click(screen.getByText(/Unlock/i))
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith('/api/requests', {
@@ -117,7 +135,7 @@ describe('AdminPanel', () => {
     render(<AdminPanel />)
 
     await user.type(screen.getByPlaceholderText(/enter secret word/i), 'banana123')
-    await user.click(screen.getByText(/Unlock/i))
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
 
     await waitFor(() => {
       expect(screen.getByText(/Anonymous/i)).toBeInTheDocument()
@@ -134,7 +152,7 @@ describe('AdminPanel', () => {
     render(<AdminPanel />)
 
     await user.type(screen.getByPlaceholderText(/enter secret word/i), 'banana123')
-    await user.click(screen.getByText(/Unlock/i))
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
 
     await waitFor(() => {
       expect(screen.getByText(/alice@test.com/)).toBeInTheDocument()
@@ -158,10 +176,10 @@ describe('AdminPanel', () => {
     render(<AdminPanel />)
 
     await user.type(screen.getByPlaceholderText(/enter secret word/i), 'banana123')
-    await user.click(screen.getByText(/Unlock/i))
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
 
     await waitFor(() => {
-      expect(screen.getByText('Fix printer')).toBeInTheDocument()
+      expect(screen.getByText('The printer is broken')).toBeInTheDocument()
     })
 
     await user.click(screen.getByText('✓ Done'))
@@ -195,10 +213,10 @@ describe('AdminPanel', () => {
     render(<AdminPanel />)
 
     await user.type(screen.getByPlaceholderText(/enter secret word/i), 'banana123')
-    await user.click(screen.getByText(/Unlock/i))
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
 
     await waitFor(() => {
-      expect(screen.getByText('Fix printer')).toBeInTheDocument()
+      expect(screen.getByText('The printer is broken')).toBeInTheDocument()
     })
 
     await user.click(screen.getByText('✕'))
@@ -211,7 +229,7 @@ describe('AdminPanel', () => {
 
     // Request should be removed from list (optimistic update)
     await waitFor(() => {
-      expect(screen.queryByText('Fix printer')).not.toBeInTheDocument()
+      expect(screen.queryByText('The printer is broken')).not.toBeInTheDocument()
     })
   })
 
@@ -225,7 +243,7 @@ describe('AdminPanel', () => {
     render(<AdminPanel />)
 
     await user.type(screen.getByPlaceholderText(/enter secret word/i), 'banana123')
-    await user.click(screen.getByText(/Unlock/i))
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
 
     await waitFor(() => {
       expect(screen.getByText(/No pending requests/i)).toBeInTheDocument()
@@ -242,22 +260,22 @@ describe('AdminPanel', () => {
     render(<AdminPanel />)
 
     await user.type(screen.getByPlaceholderText(/enter secret word/i), 'banana123')
-    await user.click(screen.getByText(/Unlock/i))
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
 
     await waitFor(() => {
       expect(screen.getByText(/Show completed/i)).toBeInTheDocument()
     })
 
-    // Completed request should NOT be visible initially
-    expect(screen.queryByText('Old task')).not.toBeInTheDocument()
+    // Completed request message should NOT be visible initially
+    expect(screen.queryByText('This is done already')).not.toBeInTheDocument()
 
     // Click to show completed
     await user.click(screen.getByText(/Show completed/i))
-    expect(screen.getByText('Old task')).toBeInTheDocument()
+    expect(screen.getByText('This is done already')).toBeInTheDocument()
 
     // Click again to hide
     await user.click(screen.getByText(/Show completed/i))
-    expect(screen.queryByText('Old task')).not.toBeInTheDocument()
+    expect(screen.queryByText('This is done already')).not.toBeInTheDocument()
   })
 
   it('does not show completed section when there are no completed requests', async () => {
@@ -271,12 +289,29 @@ describe('AdminPanel', () => {
     render(<AdminPanel />)
 
     await user.type(screen.getByPlaceholderText(/enter secret word/i), 'banana123')
-    await user.click(screen.getByText(/Unlock/i))
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
 
     await waitFor(() => {
-      expect(screen.getByText('Fix printer')).toBeInTheDocument()
+      expect(screen.getByText('The printer is broken')).toBeInTheDocument()
     })
 
     expect(screen.queryByText(/Show completed/i)).not.toBeInTheDocument()
+  })
+
+  it('shows ticket type badge when provided', async () => {
+    const user = userEvent.setup()
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ ok: true, data: [sampleRequests[0]] }),
+    })
+
+    render(<AdminPanel />)
+
+    await user.type(screen.getByPlaceholderText(/enter secret word/i), 'banana123')
+    await user.click(screen.getByRole('button', { name: 'Unlock' }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/🐛 Bug/i)).toBeInTheDocument()
+    })
   })
 })
