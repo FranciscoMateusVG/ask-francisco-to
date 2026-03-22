@@ -107,8 +107,14 @@ export function AdminPanel() {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold text-white mb-1">📋 Painel de Pedidos</h1>
           <p className="text-purple-300 text-sm">
-            <span>{pending.length} pendente{pending.length !== 1 ? 's' : ''}</span>
-            {completed.length > 0 && <span> · {completed.length} concluído{completed.length !== 1 ? 's' : ''}</span>}
+            {unlocked ? (
+              <>
+                <span>{pending.length} pendente{pending.length !== 1 ? 's' : ''}</span>
+                {completed.length > 0 && <span> · {completed.length} concluído{completed.length !== 1 ? 's' : ''}</span>}
+              </>
+            ) : (
+              <span>Entre com a palavra secreta para ver os pedidos</span>
+            )}
           </p>
         </div>
       </div>
